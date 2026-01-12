@@ -4,6 +4,7 @@ class WatermarkApp {
         this.files = [];
         this.processedFiles = [];
         this.zip = new JSZip();
+        this.chineseFont = null; // Cache Chinese font
         this.init();
     }
 
@@ -202,6 +203,26 @@ class WatermarkApp {
         const pdfDoc = await PDFLib.PDFDocument.load(bytes);
         const pages = pdfDoc.getPages();
 
+        // Load Chinese font (Noto Sans SC from Google Fonts CDN)
+        if (!this.chineseFont) {
+            try {
+                const fontUrl = 'https://fonts.gstatic.com/s/notosanssc/v36/k3kJo84MPvpLmixcA63oeALhL4iJ-Q7m8JLJf0-i6Ig0.woff2';
+                const fontResponse = await fetch(fontUrl);
+                const fontBytes = await fontResponse.arrayBuffer();
+                this.chineseFont = await pdfDoc.embedFont(fontBytes);
+            } catch (e) {
+                console.error('Failed to load Chinese font:', e);
+                // Fallback to built-in font (won't support Chinese)
+                this.chineseFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+            }
+        } else {
+            // For each new PDF, we need to embed the font again
+            const fontUrl = 'https://fonts.gstatic.com/s/notosanssc/v36/k3kJo84MPvpLmixcA63oeALhL4iJ-Q7m8JLJf0-i6Ig0.woff2';
+            const fontResponse = await fetch(fontUrl);
+            const fontBytes = await fontResponse.arrayBuffer();
+            this.chineseFont = await pdfDoc.embedFont(fontBytes);
+        }
+
         // Convert hex color to RGB
         const r = parseInt(color.slice(1, 3), 16);
         const g = parseInt(color.slice(3, 5), 16);
@@ -237,7 +258,7 @@ class WatermarkApp {
             x: x - (text.length * fontSize / 4),
             y: y,
             size: fontSize,
-            font: await page.doc.embedFont(PDFLib.StandardFonts.HelveticaBold),
+            font: this.chineseFont,
             color: PDFLib.rgb(r / 255, g / 255, b / 255),
             opacity: opacity,
         });
