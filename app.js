@@ -58,8 +58,8 @@ class WatermarkApp {
             input.type = 'file';
             input.webkitdirectory = true;
             input.multiple = true;
-            input.click();
             input.onchange = (e) => this.handleFiles(e.target.files);
+            input.click();
         });
 
         // File selection
@@ -69,8 +69,8 @@ class WatermarkApp {
             input.type = 'file';
             input.multiple = true;
             input.accept = '.pdf,.docx,.xlsx,.png,.jpg,.jpeg';
-            input.click();
             input.onchange = (e) => this.handleFiles(e.target.files);
+            input.click();
         });
 
         // Opacity display
