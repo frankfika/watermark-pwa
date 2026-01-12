@@ -44,7 +44,7 @@ class WatermarkApp {
         this.dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             this.dropZone.classList.remove('drag-over');
-            this.handleFiles(e.dataTransfer.files);
+            this.handleDrop(e.dataTransfer);
         });
 
         this.dropZone.addEventListener('click', () => {
@@ -80,6 +80,48 @@ class WatermarkApp {
 
         // Download all
         this.downloadAllBtn.addEventListener('click', () => this.downloadAll());
+    }
+
+    async handleDrop(dataTransfer) {
+        const items = dataTransfer.items;
+        if (!items || items.length === 0) {
+            this.handleFiles(dataTransfer.files);
+            return;
+        }
+
+        // Use webkitGetAsEntry for folder support
+        const files = [];
+        const entries = [];
+
+        for (let i = 0; i < items.length; i++) {
+            const entry = items[i].webkitGetAsEntry();
+            if (entry) entries.push(entry);
+        }
+
+        await this.traverseFileTree(entries, files);
+        this.handleFiles(files);
+    }
+
+    async traverseFileTree(entries, files) {
+        const promises = entries.map(entry => this.processEntry(entry, files));
+        await Promise.all(promises);
+    }
+
+    async processEntry(entry, files) {
+        if (entry.isFile) {
+            await new Promise((resolve) => {
+                entry.file((file) => {
+                    files.push(file);
+                    resolve();
+                });
+            });
+        } else if (entry.isDirectory) {
+            const reader = entry.createReader();
+            const entries = await new Promise((resolve) => {
+                reader.readEntries(resolve);
+            });
+            await this.traverseFileTree(entries, files);
+        }
     }
 
     async handleFiles(fileList) {
