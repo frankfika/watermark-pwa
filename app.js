@@ -54,11 +54,18 @@ class WatermarkApp {
         // Folder selection
         this.selectBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            console.log('Folder button clicked');
             const input = document.createElement('input');
             input.type = 'file';
             input.webkitdirectory = true;
             input.multiple = true;
-            input.onchange = (e) => this.handleFiles(e.target.files);
+            input.onchange = (e) => {
+                console.log('Files selected:', e.target.files.length);
+                for (let f of e.target.files) {
+                    console.log('  -', f.name, f.type);
+                }
+                this.handleFiles(e.target.files);
+            };
             input.click();
         });
 
@@ -134,11 +141,15 @@ class WatermarkApp {
     }
 
     async handleFiles(fileList) {
-        this.files = Array.from(fileList).filter(f =>
+        console.log('handleFiles called with', fileList.length, 'files');
+        const allFiles = Array.from(fileList);
+        this.files = allFiles.filter(f =>
             f.name.match(/\.(pdf|docx|xlsx|png|jpg|jpeg)$/i)
         );
+        console.log('After filter:', this.files.length, 'matching files');
 
         if (this.files.length === 0) {
+            console.log('No matching files found!');
             alert('没有找到支持的文件格式 (PDF, DOCX, XLSX, PNG, JPG)');
             return;
         }
