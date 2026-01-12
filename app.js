@@ -4,7 +4,6 @@ class WatermarkApp {
         this.files = [];
         this.processedFiles = [];
         this.zip = new JSZip();
-        this.chineseFont = null; // Cache Chinese font
         this.init();
     }
 
@@ -203,24 +202,23 @@ class WatermarkApp {
         const pdfDoc = await PDFLib.PDFDocument.load(bytes);
         const pages = pdfDoc.getPages();
 
-        // Load Chinese font (Noto Sans SC from Google Fonts CDN)
-        if (!this.chineseFont) {
-            try {
-                const fontUrl = 'https://fonts.gstatic.com/s/notosanssc/v36/k3kJo84MPvpLmixcA63oeALhL4iJ-Q7m8JLJf0-i6Ig0.woff2';
-                const fontResponse = await fetch(fontUrl);
-                const fontBytes = await fontResponse.arrayBuffer();
-                this.chineseFont = await pdfDoc.embedFont(fontBytes);
-            } catch (e) {
-                console.error('Failed to load Chinese font:', e);
-                // Fallback to built-in font (won't support Chinese)
-                this.chineseFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
-            }
-        } else {
-            // For each new PDF, we need to embed the font again
-            const fontUrl = 'https://fonts.gstatic.com/s/notosanssc/v36/k3kJo84MPvpLmixcA63oeALhL4iJ-Q7m8JLJf0-i6Ig0.woff2';
+        // Load Chinese font - use Source Han Sans from npm CDN
+        // Using TTF format which PDF-lib supports better
+        const fontUrl = 'https://cdn.jsdelivr.net/npm/source-han-sans-cn@1.0.0/SourceHanSansCN-Normal.ttf';
+
+        let font;
+        try {
+            console.log('Loading Chinese font...');
             const fontResponse = await fetch(fontUrl);
+            if (!fontResponse.ok) throw new Error(`HTTP ${fontResponse.status}`);
             const fontBytes = await fontResponse.arrayBuffer();
-            this.chineseFont = await pdfDoc.embedFont(fontBytes);
+            font = await pdfDoc.embedFont(fontBytes);
+            console.log('Font loaded successfully');
+        } catch (e) {
+            console.error('Failed to load Chinese font:', e);
+            // Fallback - can't support Chinese
+            alert('警告：无法加载中文字体，水印可能显示异常');
+            font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
         }
 
         // Convert hex color to RGB
@@ -235,17 +233,17 @@ class WatermarkApp {
                 // Tiled watermark
                 for (let x = 0; x < width; x += 200) {
                     for (let y = 0; y < height; y += 150) {
-                        await this.addWatermarkToPage(page, text, r, g, b, opacity, x, y, 20);
+                        await this.addWatermarkToPage(page, text, r, g, b, opacity, x, y, 20, font);
                     }
                 }
             } else if (position === 'diagonal') {
                 // Diagonal pattern
                 for (let i = -height; i < width + height; i += 250) {
-                    await this.addWatermarkToPage(page, text, r, g, b, opacity, i, i * 0.5, 24);
+                    await this.addWatermarkToPage(page, text, r, g, b, opacity, i, i * 0.5, 24, font);
                 }
             } else {
                 // Center
-                await this.addWatermarkToPage(page, text, r, g, b, opacity, width / 2, height / 2, 48);
+                await this.addWatermarkToPage(page, text, r, g, b, opacity, width / 2, height / 2, 48, font);
             }
         }
 
@@ -253,12 +251,12 @@ class WatermarkApp {
         return new File([pdfBytes], this.addSuffix(file.name, 'watermarked'), { type: 'application/pdf' });
     }
 
-    async addWatermarkToPage(page, text, r, g, b, opacity, x, y, fontSize) {
+    async addWatermarkToPage(page, text, r, g, b, opacity, x, y, fontSize, font) {
         page.drawText(text, {
             x: x - (text.length * fontSize / 4),
             y: y,
             size: fontSize,
-            font: this.chineseFont,
+            font: font,
             color: PDFLib.rgb(r / 255, g / 255, b / 255),
             opacity: opacity,
         });
