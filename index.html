@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水印工具 - Watermark Tool</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" type="image/png" href="icon-192.png">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📄 水印工具</h1>
+            <p class="subtitle">拖拽文件夹或文件，自动添加水印</p>
+        </header>
+
+        <div class="controls">
+            <div class="input-group">
+                <label for="watermarkText">水印文字</label>
+                <input type="text" id="watermarkText" value="中科升哲尽调使用" placeholder="输入水印文字">
+            </div>
+
+            <div class="input-group">
+                <label for="watermarkColor">水印颜色</label>
+                <input type="color" id="watermarkColor" value="#ff0000">
+            </div>
+
+            <div class="input-group">
+                <label for="watermarkOpacity">透明度</label>
+                <input type="range" id="watermarkOpacity" min="10" max="100" value="30">
+                <span id="opacityValue">30%</span>
+            </div>
+
+            <div class="input-group">
+                <label for="watermarkPosition">位置</label>
+                <select id="watermarkPosition">
+                    <option value="center">居中</option>
+                    <option value="tile">平铺</option>
+                    <option value="diagonal">对角线</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-zone-content">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p class="drop-text">拖拽文件或文件夹到这里</p>
+                <p class="drop-subtext">或点击选择文件</p>
+                <input type="file" id="fileInput" multiple webkitdirectory directory>
+                <button class="select-btn" id="selectBtn">选择文件夹</button>
+                <button class="select-btn" id="selectFilesBtn">选择文件</button>
+            </div>
+        </div>
+
+        <div class="progress-area" id="progressArea" style="display: none;">
+            <div class="progress-header">
+                <span>处理进度</span>
+                <span id="progressText">0 / 0</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="file-list" id="fileList"></div>
+        </div>
+
+        <div class="result-area" id="resultArea" style="display: none;">
+            <div class="result-header">
+                <h3>处理完成</h3>
+                <button class="download-all-btn" id="downloadAllBtn">📦 下载全部 (ZIP)</button>
+            </div>
+            <p class="result-summary" id="resultSummary"></p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').then(() => {
+                console.log('Service Worker registered');
+            }).catch((err) => {
+                console.log('Service Worker registration failed', err);
+            });
+        }
+    </script>
+</body>
+</html>
