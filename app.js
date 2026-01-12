@@ -117,10 +117,19 @@ class WatermarkApp {
             });
         } else if (entry.isDirectory) {
             const reader = entry.createReader();
-            const entries = await new Promise((resolve) => {
-                reader.readEntries(resolve);
-            });
-            await this.traverseFileTree(entries, files);
+            let allEntries = [];
+
+            // readEntries only returns up to 100 entries at a time
+            // Keep calling until it returns an empty array
+            while (true) {
+                const entries = await new Promise((resolve) => {
+                    reader.readEntries(resolve);
+                });
+                if (entries.length === 0) break;
+                allEntries = allEntries.concat(entries);
+            }
+
+            await this.traverseFileTree(allEntries, files);
         }
     }
 
