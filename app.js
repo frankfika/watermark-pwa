@@ -202,14 +202,11 @@ class WatermarkApp {
         const pdfDoc = await PDFLib.PDFDocument.load(bytes);
         const pages = pdfDoc.getPages();
 
-        // Load Chinese font - use Source Han Sans from npm CDN
-        // Using TTF format which PDF-lib supports better
-        const fontUrl = 'https://cdn.jsdelivr.net/npm/source-han-sans-cn@1.0.0/SourceHanSansCN-Normal.ttf';
-
+        // Load Chinese font from local file
         let font;
         try {
             console.log('Loading Chinese font...');
-            const fontResponse = await fetch(fontUrl);
+            const fontResponse = await fetch('./NotoSansSC-Regular.ttf');
             if (!fontResponse.ok) throw new Error(`HTTP ${fontResponse.status}`);
             const fontBytes = await fontResponse.arrayBuffer();
             font = await pdfDoc.embedFont(fontBytes);

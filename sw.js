@@ -1,4 +1,4 @@
-const CACHE_NAME = 'watermark-tool-v1';
+const CACHE_NAME = 'watermark-tool-v2';
 const urlsToCache = [
     './',
     './index.html',
